@@ -8,12 +8,12 @@ import Foundation
 class LinkedList<T> {
     
     // Internal Node Class
-    private class ListNode<T> {
-        var value: T
+    private class ListNode<U> {
+        var value: U
         var next: ListNode?
         var prev: ListNode?
         
-        init(value: T, next: ListNode? = nil, prev: ListNode? = nil) {
+        init(value: U, next: ListNode? = nil, prev: ListNode? = nil) {
             self.value = value
             self.next = next
             self.prev = prev
@@ -82,20 +82,25 @@ class LinkedList<T> {
     }
     
     // Delete at specific index
-    func delete(_ at index: Int) -> T? {
+    func delete(_ index: Int) -> T? {
         if count == 0 || index >= count || index < 0 { return nil } // address nil cases
         
-        let node = at(index)
-        let value = node.value
+        var value: T?
 
-        if node === head {
-            head = node.next
+        if index == 0 {
+            let node = head
+            value = node?.value
+            head = node?.next
             head?.prev = nil
         }
-        if node === tail { // Head and tail could be the same if count == 1
-            tail = node.prev
+        if index == count - 1 { // Head and tail could be the same if count == 1
+            let node = tail
+            value = node?.value
+            tail = node?.prev
             tail?.next = nil
-        } else {
+        } else if index != 0{
+            let node = at(index)
+            value = node.value
             node.prev!.next = node.next
             node.next!.prev = node.prev
         }
@@ -195,13 +200,78 @@ class LinkedList<T> {
     }
     
     func asyncMap(_ transform: @escaping (T) -> T) {
-        DispatchQueue.global().async {
-            var node = self.head
-            while let currentNode = node {
-                currentNode.value = transform(currentNode.value) // Now executes asynchronously
-                node = currentNode.next
-            }
+        // same as normal map for now
+        var node = head
+        while let currentNode = node {
+            currentNode.value = transform(currentNode.value)
+            node = currentNode.next
         }
     }
 
 }
+
+
+// Test LinkedList Implementation
+
+print("\n=== LINKED LIST TEST CASES ===\n")
+
+// Create a LinkedList of Integers
+var intList = LinkedList<Int>()
+
+// Test Append
+print("\n--- Append Elements ---")
+intList.append(10)
+intList.append(20)
+intList.append(30)
+intList.append(40)
+intList.append(50)
+intList.display()  // Expected: [10 <-> 20 <-> 30 <-> 40 <-> 50]
+
+// Test Prepend
+print("\n--- Prepend Elements ---")
+intList.prepend(5)
+intList.prepend(2)
+intList.display()  // Expected: [2 <-> 5 <-> 10 <-> 20 <-> 30 <-> 40 <-> 50]
+
+// Test Insert
+print("\n--- Insert Elements ---")
+intList.insert(15, 3)
+intList.insert(35, 6)
+intList.display()  // Expected: [2 <-> 5 <-> 10 <-> 15 <-> 20 <-> 30 <-> 35 <-> 40 <-> 50]
+
+// Test Delete
+print("\n--- Delete Elements ---")
+intList.delete(0)  // Remove first element
+intList.delete(intList.size - 1)  // Remove last element
+intList.delete(3)  // Remove middle element (20)
+intList.display()  // Expected: [5 <-> 10 <-> 15 <-> 30 <-> 35 <-> 40]
+
+// Test PopFirst and PopLast
+print("\n--- Pop Elements ---")
+print("First Popped:", intList.popFirst() ?? "None") // Expected: 5
+print("Last Popped:", intList.popLast() ?? "None")   // Expected: 40
+intList.display()  // Expected: [10 <-> 15 <-> 30 <-> 35]
+
+// Test Contains
+print("\n--- Contains Check ---")
+print("List contains 15?", intList.contains { $0 == 15 }) // Expected: true
+print("List contains 99?", intList.contains { $0 == 99 }) // Expected: false
+
+// Test Find & FindFirst
+print("\n--- Find Elements ---")
+print("Find elements greater than 12:", intList.find { $0 > 12 })  // Expected: [15, 30, 35]
+print("Find first element greater than 12:", intList.findFirst { $0 > 12 } ?? "None") // Expected: 15
+
+// Test Map
+print("\n--- Map Function ---")
+intList.map { $0 * 2 }
+intList.display()  // Expected: [20 <-> 30 <-> 60 <-> 70] (Doubled values)
+
+// Test asyncMap
+print("\n--- Async Map Function (Double values again) ---")
+intList.asyncMap { $0 * 2 }
+
+// Test RemoveIf using @autoclosure
+print("\n--- Remove Elements Condition ---")
+intList.removeIf(intList.contains { $0 > 100 })
+intList.display()  // Expected: Removes values > 100
